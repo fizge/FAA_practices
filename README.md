@@ -35,8 +35,8 @@ Aquí organizamos la asignación de tareas:
 ## 🛠️ Flujo de Trabajo
 
 1. Cada ejercicio comienza en un **notebook**, donde se describen brevemente los pasos y se desarrollan las soluciones.
-2. Una vez completado, se transfiere a un archivo **.jl** en la carpeta `julia/`.
-3. Se ejecutan los **tests proporcionados por los profesores** en la carpeta `test/`.
+2. Una vez completado, se transfiere a un archivo **.jl**.
+3. Se ejecutan los **tests proporcionados por los profesores**.
 4. Si todos los tests pasan, el código está listo para ser entregado. En caso de correcciones, se actualiza y se vuelve a probar.
 
 ## 🔀 Colaboración con Git
