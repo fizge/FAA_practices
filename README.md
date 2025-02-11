@@ -14,7 +14,7 @@ El repositorio está dividido en dos secciones principales:
 Estructura de carpetas para el desarrollo de las prácticas:
 
 ```
-📁 Codigo/
+📁 src/
  ├── 📁 Boletin_X/
  │   ├── 📁 Ejercicio_Y/
  │   │   ├── 📄 .ipynb   # Desarrollo inicial y anotaciones
