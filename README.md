@@ -17,9 +17,9 @@ Estructura de carpetas para el desarrollo de las prácticas:
 📁 Codigo/
  ├── 📁 Boletin_X/
  │   ├── 📁 Ejercicio_Y/
- │   │   ├── 📄 notebook/   # Desarrollo inicial y anotaciones
- │   │   ├── 📄 julia/      # Implementación final en Julia
- │   │   ├── 📄 test/       # Casos de prueba antes de la entrega
+ │   │   ├── 📄 .ipynb   # Desarrollo inicial y anotaciones
+ │   │   ├── 📄 .jl      # Implementación final en Julia
+ │   │   ├── 📄 test.jl  # Casos de prueba antes de la entrega
 ```
 
 ### 🔹 Trabajo
