@@ -119,11 +119,6 @@ function classifyOutputs(outputs:: AbstractArray{<: Real, 2}; threshold:: Real =
     end
 end
 
-
-
-
-
-
 # Primer caso: se pasa un vector booleano para target y otro para outputs
 
 function accuracy(outputs:: AbstractArray{Bool, 1}, targets:: AbstractArray{Bool, 1})
@@ -170,16 +165,6 @@ function accuracy(outputs::AbstractArray{<:Real,2}, targets::AbstractArray{Bool,
         
     end
 end
-
-
-
-
-
-
-
-
-
-
 
 function buildClassANN(numInputs:: Int, topology:: AbstractArray{<:Int, 1}, numOutputs:: Int;
      transferFunctions::AbstractArray{<:Function,1}=fill(σ, length(topology)))

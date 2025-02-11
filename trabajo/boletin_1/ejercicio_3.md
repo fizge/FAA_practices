@@ -12,4 +12,3 @@
 
 ### Miembro 4:
 - **Integración del código con las prácticas anteriores y generación de gráficos.**
-

@@ -1,0 +1,36 @@
+# Ignore Julia compiled files
+*.ji
+
+# Ignore Julia package environments
+Manifest.toml
+Project.toml
+
+# Ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore temporary files
+*.tmp
+*.temp
+
+# Ignore log files
+*.log
+
+# Ignore system-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore compiled shared libraries
+*.dll
+*.so
+*.dylib
+
+# Ignore Julia REPL history
+.julia_history
+
+# Ignore VSCode settings
+.vscode/
+
+# Ignore other common editor settings
+.idea/
+*.swp
+*~
