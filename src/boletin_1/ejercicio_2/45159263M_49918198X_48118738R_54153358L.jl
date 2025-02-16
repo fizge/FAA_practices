@@ -29,14 +29,14 @@ function oneHotEncoding(feature:: AbstractArray{Bool, 1})
     return reshape(feature, :, 1)
 end
 
-function calculateMinMaxNortmalizationParameters(dataset:: AbstractArray{<:Real, 2})
+function calculateMinMaxNormalizationParameters(dataset:: AbstractArray{<:Real, 2})
     
     mins = minimum(dataset, dims=1)
     maxs = maximum(dataset, dims=1)
     return (mins, maxs)
 end
 
-function calculateZeroMeanNortmalizationParameters(dataset:: AbstractArray{<:Real, 2})
+function calculateZeroMeanNormalizationParameters(dataset:: AbstractArray{<:Real, 2})
     
     meanValues = mean(dataset, dims=1)
     stdValues = std(dataset, dims=1)
@@ -51,7 +51,7 @@ end
 
 function normalizeMinMax!(dataset:: AbstractArray{<: Real, 2})
     
-    normalizationParameters = calculateMinMaxNortmalizationParameters(dataset)
+    normalizationParameters = calculateMinMaxNormalizationParameters(dataset)
     normalizeMinMax!(dataset, normalizationParameters)
 end
 
@@ -65,7 +65,7 @@ end
 
 function normalizeMinMax(dataset:: AbstractArray{<: Real, 2})
     
-    normalizationParameters = calculateMinMaxNortmalizationParameters(dataset)
+    normalizationParameters = calculateMinMaxNormalizationParameters(dataset)
     normalized_dataset = copy(dataset)
     return normalizeMinMax(normalized_dataset, normalizationParameters)
 end
@@ -79,7 +79,7 @@ end
 
 function normalizeZeroMean!(dataset:: AbstractArray{<: Real, 2})
     
-    norm_values = calculateZeroMeanNortmalizationParameters(dataset)
+    norm_values = calculateZeroMeanNormalizationParameters(dataset)
     normalizeZeroMean!(dataset, norm_values)
 end
 
@@ -94,7 +94,7 @@ end
 
 function normalizeZeroMean(dataset:: AbstractArray{<: Real, 2})
     
-    norm_values = calculateZeroMeanNortmalizationParameters(dataset)
+    norm_values = calculateZeroMeanNormalizationParameters(dataset)
     normalized_dataset = copy(dataset)
     return normalizeZeroMean(normalized_dataset, norm_values)
 end
@@ -109,7 +109,7 @@ function classifyOutputs(outputs:: AbstractArray{<: Real, 2}; threshold:: Real =
     dims = size(outputs)
     
     if dims[2] == 1
-        bool_vector = classifyOutputs(outputs[:1], threshold)
+        bool_vector = classifyOutputs(outputs[:1]; threshold)
         return reshape(bool_vector, :, 1)
     else
         (_, indicesMaxEachInstance) = findmax(outputs, dims=2) # Obtener el índice de la clase con la probabilidad más alta
@@ -158,10 +158,10 @@ function accuracy(outputs::AbstractArray{<:Real,2}, targets::AbstractArray{Bool,
     dims = size(targets)
 
     if dims[2] == 1
-        return accuracy(targets[:1], outputs[:1])
+        return accuracy(outputs[:1], targets[:1]; threshold=threshold)
 
     elseif dims[2] > 2
-        return accuracy(classifyOutputs(outputs), targets)
+        return accuracy(classifyOutputs(outputs; threshold=threshold), targets)
         
     end
 end
@@ -187,7 +187,8 @@ function buildClassANN(numInputs:: Int, topology:: AbstractArray{<:Int, 1}, numO
     return ann
 end
 
-function trainClassANN(topology:: AbstractArray{<: Int, 1}, dataset:: Tuple{AbstractArray{<: Real, 2}, AbstractArray{Bool, 2}}, transferFunctions::AbstractArray{<:Function,1} = fill(σ, length(topology)), maxEpochs:: Int = 1000, minLoss:: Real = 0.0, learningRate:: Real = 0.01)
+function trainClassANN(topology:: AbstractArray{<: Int, 1}, dataset:: Tuple{AbstractArray{<: Real, 2}, AbstractArray{Bool, 2}};
+     transferFunctions::AbstractArray{<:Function,1} = fill(σ, length(topology)), maxEpochs:: Int = 1000, minLoss:: Real = 0.0, learningRate:: Real = 0.01)
 
     inputs, targets = dataset
     inputs = Float32.(inputs')  # Convertir a Float32 y trasponer
@@ -196,7 +197,7 @@ function trainClassANN(topology:: AbstractArray{<: Int, 1}, dataset:: Tuple{Abst
     numInputs = size(inputs, 1)
     numOutputs = size(targets, 1)
     
-    ann = buildClassANN(numInputs, topology, numOutputs, transferFunctions) # build ANN
+    ann = buildClassANN(numInputs, topology, numOutputs; transferFunctions) # build ANN
     loss(model, x,y) = (size(y,1) == 1) ? Losses.binarycrossentropy(model(x),y) : Losses.crossentropy(model(x),y) # loss function
     opt_state = Flux.setup(ADAM(learningRate), ann) # optimizer
 
@@ -217,10 +218,10 @@ function trainClassANN(topology:: AbstractArray{<: Int, 1}, dataset:: Tuple{Abst
     return ann, losses
 end
 
-function trainClassANN(topology:: AbstractArray{<: Int, 1}, dataset:: Tuple{AbstractArray{<: Real, 2}, AbstractArray{Bool, 1}}, transferFunctions::AbstractArray{<:Function,1} = fill(σ, length(topology)), maxEpochs:: Int = 1000, minLoss:: Real = 0.0, learningRate:: Real = 0.01)
+function trainClassANN(topology:: AbstractArray{<: Int, 1}, (inputs, targets):: Tuple{AbstractArray{<: Real, 2}, AbstractArray{Bool, 1}};
+     transferFunctions::AbstractArray{<:Function,1} = fill(σ, length(topology)), maxEpochs:: Int = 1000, minLoss:: Real = 0.0, learningRate:: Real = 0.01)
 
-    inputs, targets = dataset
     reshape!(targets, :, 1) 
-    return trainClassANN(topology, (inputs, targets), transferFunctions, maxEpochs, minLoss, learningRate)
+    return trainClassANN(topology, (inputs, targets); transferFunctions=transferFunctions, maxEpochs=maxEpochs, minLoss=minLoss, learningRate=learningRate)
     
 end

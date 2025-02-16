@@ -3,7 +3,7 @@
 # Archivo de pruebas para realizar autoevaluación de algunas funciones de los ejercicios
 
 # Importamos el archivo con las soluciones a los ejercicios
-include("45159263M_49918198X_48118738R.jl");
+include("45159263M_49918198X_48118738R_54153358L.jl");
 #   Cambiar "soluciones.jl" por el nombre del archivo que contenga las funciones a desarrollar
 
 # Fichero de pruebas realizado con la versión 1.11.2 de Julia
@@ -20,7 +20,7 @@ Pkg.status("Flux")
 
 # Cargamos el dataset
 using DelimitedFiles: readdlm
-dataset = readdlm("iris.data",',');
+dataset = readdlm("/Users/rafa/Documents/Uni/Cuatri4/machine_learning/FAA_practices/iris.data",',');
 # Preparamos las entradas
 inputs = convert(Array{Float32,2}, dataset[:,1:4]);
 
