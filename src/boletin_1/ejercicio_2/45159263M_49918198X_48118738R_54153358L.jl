@@ -3,6 +3,8 @@ using Statistics
 using Flux
 using Flux.Losses
 
+
+
 function oneHotEncoding(feature:: AbstractArray{<:Any, 1}, classes:: AbstractArray{<:Any, 1})
 
     num_classes = length(classes)
@@ -72,15 +74,16 @@ end
 
 function normalizeZeroMean!(dataset:: AbstractArray{<: Real, 2}, normalizationParameters:: NTuple{2, AbstractArray{<: Real, 2}})
     
-    meanValues, stdValues = normalizationParameters
-    dataset .= (dataset .- meanValues) ./ stdValues
-    dataset[:, vec(stdValues.==0)] .= 0;
+    meanv, stdv = normvalues
+    dataset .-= meanv
+    dataset ./= stdv
+    dataset[:, vec(stdv.==0)] .= 0;
 end
 
 function normalizeZeroMean!(dataset:: AbstractArray{<: Real, 2})
     
-    norm_values = calculateZeroMeanNormalizationParameters(dataset)
-    normalizeZeroMean!(dataset, norm_values)
+    normvalues = calculateZeroMeanNormalizationParameters(dataset)
+    normalizeZeroMean!(dataset, normvalues)
 end
 
 function normalizeZeroMean(dataset:: AbstractArray{<: Real, 2}, normalizationParameters:: NTuple{2, AbstractArray{<: Real, 2}})
@@ -99,18 +102,17 @@ function normalizeZeroMean(dataset:: AbstractArray{<: Real, 2})
     return normalizeZeroMean(normalized_dataset, norm_values)
 end
 
-function classifyOutputs(outputs:: AbstractArray{<: Real, 1}; threshold:: Real = 0.5)
+function classifyOutputs(outputs::AbstractArray{<:Real,1}; threshold::Real=0.5)
     
     return outputs .>= threshold
 end
 
-function classifyOutputs(outputs:: AbstractArray{<: Real, 2}; threshold:: Real = 0.5)
+function classifyOutputs(outputs::AbstractArray{<:Real,2}; threshold::Real=0.5) 
 
     dims = size(outputs)
     
     if dims[2] == 1
-        bool_vector = classifyOutputs(outputs[:1]; threshold)
-        return reshape(bool_vector, :, 1)
+        return classifyOutputs(outputs[:]; threshold)
     else
         (_, indicesMaxEachInstance) = findmax(outputs, dims=2) # Obtener el índice de la clase con la probabilidad más alta
         outputs = falses(dims)
@@ -133,7 +135,9 @@ function accuracy(outputs:: AbstractArray{Bool, 2}, targets:: AbstractArray{Bool
     dims = size(targets)
 
     if dims[2] == 1
-        return accuracy(targets[:], outputs[:])
+        acc = accuracy(outputs[:], targets[:])
+        println(acc)
+        return acc
 
     elseif dims[2] > 2
 
@@ -153,18 +157,19 @@ end
 
 # Cuarto caso: se pasa una matriz de targets booleanos y una matriz de probabilidades como salida de la ANN.
 
-function accuracy(outputs::AbstractArray{<:Real,2}, targets::AbstractArray{Bool,2}; threshold::Real=0.5)
-    
+function accuracy(outputs::AbstractArray{<:Real,2}, targets::AbstractArray{Bool,2}; threshold::Real=0.5) 
+           
     dims = size(targets)
 
     if dims[2] == 1
-        return accuracy(outputs[:1], targets[:1]; threshold=threshold)
+        return accuracy(outputs[:], targets[:]; threshold=threshold)
 
     elseif dims[2] > 2
         return accuracy(classifyOutputs(outputs; threshold=threshold), targets)
         
     end
 end
+
 
 function buildClassANN(numInputs:: Int, topology:: AbstractArray{<:Int, 1}, numOutputs:: Int;
      transferFunctions::AbstractArray{<:Function,1}=fill(σ, length(topology)))
