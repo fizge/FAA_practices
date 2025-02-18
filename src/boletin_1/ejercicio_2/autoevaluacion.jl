@@ -16,11 +16,12 @@ Pkg.status("Flux")
 # Es posible que con otras versiones los resultados sean distintos, estando las funciones bien, sobre todo en la funciones que implican alguna componente aleatoria
 
 
-
+ruta_rafa = "/Users/rafa/Documents/Uni/Cuatri4/machine_learning/FAA_practices/iris.data"
+ruta_guille = "C:/Users/blanc/OneDrive/Escritorio/School/IA_2_2024-2025/Cuatrimestre_4/FAA/Prácticas/iris.data"
 
 # Cargamos el dataset
 using DelimitedFiles: readdlm
-dataset = readdlm("/Users/rafa/Documents/Uni/Cuatri4/machine_learning/FAA_practices/iris.data",',');
+dataset = readdlm(ruta_guille,',');
 # Preparamos las entradas
 inputs = convert(Array{Float32,2}, dataset[:,1:4]);
 
