@@ -10,7 +10,8 @@ function oneHotEncoding(feature:: AbstractArray{<:Any, 1}, classes:: AbstractArr
     num_classes = length(classes)
 
     if num_classes <= 2
-        oneHot = reshape([feature.==classes[1]], :, 1)
+        oneHot = Matrix{Bool}(undef, length(feature), 1)
+        oneHot[:, 1] = feature .== classes[1]
     else
         oneHot = Matrix{Bool}(undef, length(feature), num_classes)
         for i in 1:num_classes
@@ -48,7 +49,10 @@ end
 function normalizeMinMax!(dataset:: AbstractArray{<: Real, 2}, normalizationParameters:: NTuple{2, AbstractArray{<: Real, 2}})
     
     mins, maxs = normalizationParameters
-    dataset .= (dataset .- mins) ./ (maxs .- mins)
+    dataset .-= mins
+    dataset ./= (maxs .- mins)
+    dataset[:, vec(mins.==maxs)] .= 0
+
 end
 
 function normalizeMinMax!(dataset:: AbstractArray{<: Real, 2})
@@ -62,7 +66,9 @@ function normalizeMinMax(dataset:: AbstractArray{<: Real, 2}, normalizationParam
     mins, maxs = normalizationParameters
     normalized_dataset = copy(dataset)
     normalized_dataset .= (normalized_dataset .- mins) ./ (maxs .- mins)
+    normalized_dataset[:, vec(mins.==maxs)] .= 0;
     return normalized_dataset
+
 end
 
 function normalizeMinMax(dataset:: AbstractArray{<: Real, 2})
@@ -135,9 +141,7 @@ function accuracy(outputs:: AbstractArray{Bool, 2}, targets:: AbstractArray{Bool
     dims = size(targets)
 
     if dims[2] == 1
-        acc = accuracy(outputs[:], targets[:])
-        println(acc)
-        return acc
+        return accuracy(outputs[:], targets[:])
 
     elseif dims[2] > 2
 
