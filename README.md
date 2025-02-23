@@ -38,8 +38,8 @@ Aquí organizamos la asignación de tareas:
 1. Cada ejercicio comienza en un **notebook**, donde se describen brevemente los pasos y se desarrollan las soluciones.
 2. Una vez completado, se transfiere a un archivo **.jl**.
 3. Se ejecutan los **tests proporcionados por los profesores**.
-4. Cuando una función esté **lista** añadir SIEMPRE al **archivo de entrega** de cada boletín. 
-5. Si todos los tests pasan, el código está listo para ser entregado. En caso de correcciones, se actualiza y se vuelve a probar.
+4. Cuando una función esté **lista** añadir **SIEMPRE** al **archivo de entrega** de cada boletín.
+6. Si todos los tests pasan, el código está listo para ser entregado. En caso de correcciones, se actualiza y se vuelve a probar.
 
 ## 🔀 Colaboración con Git
 
