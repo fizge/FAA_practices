@@ -38,8 +38,13 @@ Aquí organizamos la asignación de tareas:
 1. Cada ejercicio comienza en un **notebook**, donde se describen brevemente los pasos y se desarrollan las soluciones.
 2. Una vez completado, se transfiere a un archivo **.jl**.
 3. Se ejecutan los **tests proporcionados por los profesores**.
-4. Cuando una función esté **lista** añadir **SIEMPRE** al **archivo de entrega** de cada boletín.
-6. Si todos los tests pasan, el código está listo para ser entregado. En caso de correcciones, se actualiza y se vuelve a probar.
+4. 🚨 Una vez las funciones esén listas, hacer **PULL** del **Main** para tener las otras **funciones actualizadas** (de los otros miembros del grupo).
+5. 🚨 Añadir las funciones **TERMINADAS** al archivo de entrega, sin modificar **NADA** del código de los compañeros.
+6. 🚨 Subir la rama con las funciones actualizadas y hacer **PR** para tener el **Main** actualizado.
+
+⚠️ Con este sistema nos aseguramos que:
+1. El Main siempre tiene la versión lista para la entrega.
+2. No mezclamos versiones antiguas con nuevas.
 
 ## 🔀 Colaboración con Git
 
