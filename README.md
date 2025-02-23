@@ -43,8 +43,8 @@ Aquí organizamos la asignación de tareas:
 6. 🚨 Subir la rama con las funciones actualizadas y hacer **PR** para tener el **Main** actualizado.
 
 ⚠️ Con este sistema nos aseguramos que:
-1. El Main siempre tiene la versión lista para la entrega.
-2. No mezclamos versiones antiguas con nuevas.
+1. El Main siempre tiene la versión lista para la entrega. ✅ 
+2. No mezclamos versiones antiguas con nuevas. ✅ 
 
 ## 🔀 Colaboración con Git
 
