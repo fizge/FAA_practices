@@ -117,7 +117,7 @@ end
 # Funciones para clasificar outputs: probabilidades -> bools
 
 function classifyOutputs(outputs::AbstractArray{<:Real,1}; threshold::Real=0.5)
-    return reshape(outputs .>= threshold, :, 1)
+    return outputs .>= threshold
 end
 
 function classifyOutputs(outputs::AbstractArray{<:Real,2}; threshold::Real=0.5) 
@@ -125,7 +125,7 @@ function classifyOutputs(outputs::AbstractArray{<:Real,2}; threshold::Real=0.5)
     dims = size(outputs)
     
     if dims[2] == 1
-        return classifyOutputs(outputs[:]; threshold)
+        return reshape(classifyOutputs(outputs[:]; threshold), : ,1)
     else
         (_, indicesMaxEachInstance) = findmax(outputs, dims=2) # Obtener el índice de la clase con la probabilidad más alta
         outputs = falses(dims)
