@@ -2,6 +2,7 @@ using DelimitedFiles
 using Statistics
 using Flux
 using Flux.Losses
+using Random
 
 ## One Hot Encoding
 
@@ -255,15 +256,20 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
     testLosses = Float32[]
 
     push!(trainingLosses, loss(ann, trainingInputs, trainingTargets)) # append iteration 0 loss 
+
+    #if !isempty(validationInputs)
     push!(validationLosses, loss(ann, validationInputs, validationTargets))
+    #end
+    #if !isempty(testInputs)
     push!(testLosses, loss(ann, testInputs, testTargets))
+    #end
 
     bestValidationLoss = Inf
     bestAnn = deepcopy(ann)
     epochsWithoutImprovement = 0
-
+    
     for epoch in 1:maxEpochs
-        # ENTRENAMIENTO
+      
         Flux.train!(loss, ann, [(trainingInputs, trainingTargets)], opt_state)
         currentTrainingLoss = loss(ann, trainingInputs, trainingTargets)
         push!(trainingLosses, currentTrainingLoss)
@@ -279,12 +285,15 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
             
             # PARADA TEMPRANA: Si el loss en validación mejora, actualizar mejor modelo
             if currentValidationLoss < bestValidationLoss
+       
                 bestValidationLoss = currentValidationLoss
+
                 bestAnn = deepcopy(ann)
                 epochsWithoutImprovement = 0  # Reiniciar el contador de epochs sin mejora
             else
                 epochsWithoutImprovement += 1
             end
+            
         end
     
         # PRUEBA (si hay conjunto de test)
@@ -321,3 +330,47 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
                          transferFunctions=transferFunctions, maxEpochs=maxEpochs, minLoss=minLoss, 
                          learningRate=learningRate, maxEpochsVal=maxEpochsVal)
 end;
+
+
+
+
+
+# Archivo de pruebas para realizar autoevaluación de algunas funciones de los ejercicios
+
+# Importamos el archivo con las soluciones a los ejercicios
+
+#   Cambiar "soluciones.jl" por el nombre del archivo que contenga las funciones a desarrollar
+
+# Fichero de pruebas realizado con la versión 1.11.2 de Julia
+println(VERSION)
+#  y la 1.11.2 de Random
+println(Random.VERSION)
+#  y la versión 0.16.0 de Flux
+import Pkg
+Pkg.status("Flux")
+
+# Es posible que con otras versiones los resultados sean distintos, estando las funciones bien, sobre todo en la funciones que implican alguna componente aleatoria
+# Cargamos el dataset
+using DelimitedFiles: readdlm
+dataset = readdlm("iris.data",',');
+# Preparamos las entradas
+inputs = convert(Array{Float32,2}, dataset[:,1:4]);
+# Hacemos un one-hot-encoding a las salidas deseadas
+targets = oneHotEncoding(dataset[:,5]);
+
+
+# ----------------------------------------------------------------------------------------------
+# ------------------------------------- Ejercicio 3 --------------------------------------------
+# ----------------------------------------------------------------------------------------------
+
+using Random: seed!
+# Comprobamos que la generación de números aleatorios es la esperada:
+seed!(1); @assert(isapprox(rand(), 0.07336635446929285))
+#  Si fallase aquí, seguramente dara error al comprobar los resultados de la ejecución de la siguiente función porque depende de la generación de números aleatorios
+
+# Comprobamos la función trainClassANN con estos datos
+#  Como se puede ver, los conjuntos de entrenamiento, validacion y test se solapan. Esto no es correcto, pero se hace para forzar al entrenamiento a que se pare antes de tiempo por validación (parada temprana)
+seed!(1); (ann, trainingLosses, validationLosses, testLosses) = trainClassANN([4,3], (inputs, targets);
+    validationDataset=(inputs[101:150,:], targets[101:150,:]),
+    testDataset=(inputs[51:100,:], targets[51:100,:]),
+    maxEpochs=100, maxEpochsVal=5); length(trainingLosses)
