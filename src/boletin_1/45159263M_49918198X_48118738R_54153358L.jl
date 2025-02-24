@@ -224,6 +224,8 @@ function holdOut(N::Int, Pval::Real, Ptest::Real)
     return (train_test[train], train_test[val], test)  # Returns the three datasets
 end
 
+#####
+
 # Funciones de entrenamiento con early stopping
 
 function trainClassANN(topology::AbstractArray{<:Int,1},
