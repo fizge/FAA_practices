@@ -6,27 +6,48 @@
 include("../45159263M_49918198X_48118738R_54153358L.jl");
 #   Cambiar "soluciones.jl" por el nombre del archivo que contenga las funciones a desarrollar
 
+
 # Fichero de pruebas realizado con la versión 1.11.2 de Julia
 println(VERSION)
-#  y la 1.11.2 de Random
+#  y la 1.11.3 de Random
 println(Random.VERSION)
-#  y la versión 0.16.0 de Flux
+#  y la versión 0.14.25 de Flux
 import Pkg
 Pkg.status("Flux")
 
 # Es posible que con otras versiones los resultados sean distintos, estando las funciones bien, sobre todo en la funciones que implican alguna componente aleatoria
+
+
+
+
 # Cargamos el dataset
 using DelimitedFiles: readdlm
 dataset = readdlm("iris.data",',');
 # Preparamos las entradas
 inputs = convert(Array{Float32,2}, dataset[:,1:4]);
+
+
+# ----------------------------------------------------------------------------------------------
+# ------------------------------------- Ejercicio 2 --------------------------------------------
+# ----------------------------------------------------------------------------------------------
+
+
 # Hacemos un one-hot-encoding a las salidas deseadas
 targets = oneHotEncoding(dataset[:,5]);
 
 
-# ----------------------------------------------------------------------------------------------
-# ------------------------------------- Ejercicio 3 --------------------------------------------
-# ----------------------------------------------------------------------------------------------
+# Comprobamos que las funciones de normalizar funcionan correctamente
+# Normalizacion entre maximo y minimo
+
+
+# Normalizacion de media 0. en este caso, debido a redondeos, la media y desviacion tipica de cada variable no van a dar exactamente 0 y 1 respectivamente. Por eso las comprobaciones se hacen de esta manera
+
+
+# Finalmente, normalizamos las entradas entre maximo y minimo:
+normalizeMinMax!(inputs);
+
+# Comprobamos que la creación de la RNA funciona correctamente:
+
 
 
 # Establecemos la semilla para que los resultados sean siempre los mismos
@@ -49,19 +70,3 @@ result_testLosses       = Float32[1.8724904, 1.8293855, 1.787262,  1.7450062, 1.
 @assert(all(isapprox.(validationLosses, result_validationLosses; rtol=1e-5)))
 @assert(all(isapprox.(testLosses,       result_testLosses;       rtol=1e-5)))
 
-
-function holdOut(N::Int, P::Float64)
-    @assert 0 <= P <= 1 "P debe estar entre 0 y 1"
-    indices = randperm(N)  # Generate a random permutation of indexes
-    split_point = floor(Int, N * (1 - P))  # Determines cut-off point
-    return indices[1:split_point], indices[split_point+1:end]  # Returns the tuple with the subdatasets
-end
-
-
-function holdOut(N::Int, Pval::Float64, Ptest::Float64)
-    @assert 0 <= Pval + Ptest <= 1 "La suma de Pval y Ptest debe estar entre 0 y 1"
-    train_test, test = holdOut(N, Ptest)  # Separates the test dataset
-    Pval_adjusted = Pval / (1 - Ptest)  # Adjusts Pval for the remaining datasets 
-    train, val = holdOut(length(train_test), Pval_adjusted)  # Separates validate dataset from training dataset
-    return train_test[train], train_test[val], test  # Returns the three datasets
-end
