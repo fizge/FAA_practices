@@ -3,6 +3,7 @@ using Statistics
 using Flux
 using Flux.Losses
 using Random
+using Optimisers
 
 ## One Hot Encoding
 
@@ -249,7 +250,7 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
     
     ann = buildClassANN(numTrainingInputs, topology, numTrainingOutputs; transferFunctions) # build ANN
     loss(model, x,y) = (size(y,1) == 1) ? Losses.binarycrossentropy(model(x),y) : Losses.crossentropy(model(x),y) # loss function
-    opt_state = Flux.setup(ADAM(learningRate), ann) # optimizer
+    opt_state = Flux.setup(Optimisers.ADAM(learningRate), ann) # optimizer
 
     trainingLosses = Float32[] # losses array
     validationLosses = Float32[]
@@ -330,3 +331,4 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
                          transferFunctions=transferFunctions, maxEpochs=maxEpochs, minLoss=minLoss, 
                          learningRate=learningRate, maxEpochsVal=maxEpochsVal)
 end;
+
