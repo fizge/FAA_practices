@@ -257,12 +257,12 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
 
     push!(trainingLosses, loss(ann, trainingInputs, trainingTargets)) # append iteration 0 loss 
 
-    #if !isempty(validationInputs)
-    push!(validationLosses, loss(ann, validationInputs, validationTargets))
-    #end
-    #if !isempty(testInputs)
-    push!(testLosses, loss(ann, testInputs, testTargets))
-    #end
+    if !isempty(validationInputs)
+        push!(validationLosses, loss(ann, validationInputs, validationTargets))
+    end
+    if !isempty(testInputs)
+        push!(testLosses, loss(ann, testInputs, testTargets))
+    end
 
     bestValidationLoss = Inf
     bestAnn = deepcopy(ann)
@@ -330,4 +330,3 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
                          transferFunctions=transferFunctions, maxEpochs=maxEpochs, minLoss=minLoss, 
                          learningRate=learningRate, maxEpochsVal=maxEpochsVal)
 end;
-
