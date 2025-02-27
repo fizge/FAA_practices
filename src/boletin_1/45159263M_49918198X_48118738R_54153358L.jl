@@ -238,6 +238,8 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
     maxEpochs::Int=1000, minLoss::Real=0.0, learningRate::Real=0.01,
     maxEpochsVal::Int=20)
 
+    println("hola")
+
     trainingInputs = Float32.(trainingDataset[1]') # Convertir inputs a float32
     validationInputs = Float32.(validationDataset[1]') # Convertir inputs a float32
     testInputs = Float32.(testDataset[1]') # Convertir inputs a float32
@@ -274,7 +276,6 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
     for epoch in 1:maxEpochs
       
         Flux.train!(loss, ann, [(trainingInputs, trainingTargets)], opt_state)
-        epochs = epochs + 1
         currentTrainingLoss = loss(ann, trainingInputs, trainingTargets)
         push!(trainingLosses, currentTrainingLoss)
         
@@ -319,7 +320,7 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
         return (ann, trainingLosses, validationLosses, testLosses)
     end
 end;
-
+   
 function trainClassANN(topology::AbstractArray{<:Int,1},
     trainingDataset:: Tuple{AbstractArray{<:Real,2}, AbstractArray{Bool,1}};
     validationDataset::Tuple{AbstractArray{<:Real,2}, AbstractArray{Bool,1}}=
