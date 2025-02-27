@@ -264,14 +264,13 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
 
     if !isempty(validationInputs)
         push!(validationLosses, loss(ann, validationInputs, validationTargets))
+        bestValidationLoss = validationLosses[1]
+        bestAnn = deepcopy(ann)
+        epochsWithoutImprovement = 0
     end
     if !isempty(testInputs)
         push!(testLosses, loss(ann, testInputs, testTargets))
     end
-
-    bestValidationLoss = Inf
-    bestAnn = deepcopy(ann)
-    epochsWithoutImprovement = 0
     
     for epoch in 1:maxEpochs
       
@@ -282,6 +281,13 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
         if currentTrainingLoss <= minLoss
             break
         end
+
+        # Case: conjunto de test
+        if !isempty(testInputs)
+            currentTestLoss = loss(ann, testInputs, testTargets)
+            push!(testLosses, currentTestLoss)
+        end
+
     
         # VALIDACIÓN (si hay conjunto de validación)
         if !isempty(validationInputs)
@@ -297,21 +303,12 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
             else
                 epochsWithoutImprovement += 1
             end
-            
-        end
-    
-        # PRUEBA (si hay conjunto de test)
-        if !isempty(testInputs)
-            currentTestLoss = loss(ann, testInputs, testTargets)
-            push!(testLosses, currentTestLoss)
-        end
-    
-        # CRITERIO DE PARADA TEMPRANA
-        if epochsWithoutImprovement >= maxEpochsVal
-            println("Parada temprana en epoch $epoch ")
-            break
-        end
 
+            if epochsWithoutImprovement >= maxEpochsVal
+                println("Parada temprana en epoch $epoch ")
+                break
+            end
+        end
     end
     
     if !isempty(validationInputs)
@@ -320,6 +317,7 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
         return (ann, trainingLosses, validationLosses, testLosses)
     end
 end;
+   
    
 function trainClassANN(topology::AbstractArray{<:Int,1},
     trainingDataset:: Tuple{AbstractArray{<:Real,2}, AbstractArray{Bool,1}};
