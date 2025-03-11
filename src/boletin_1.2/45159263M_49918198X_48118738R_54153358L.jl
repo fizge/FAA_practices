@@ -32,6 +32,49 @@ function confusionMatrix(outputs::AbstractArray{<:Real,1},
 
 end
 
+
+function printConfusionMatrix(outputs::AbstractArray{Bool,2}, targets::AbstractArray{Bool,2}; weighted::Bool=true)
+    cm = confusionMatrix(outputs, targets; weighted=weighted)
+    println("Confusion Matrix:\n", cm[end])  # Último elemento es la matriz de confusión
+    println("Accuracy: ", cm[1])
+    println("Error Rate: ", cm[2])
+    println("Sensitivity: ", cm[3])
+    println("Specificity: ", cm[4])
+    println("Positive Predictive Value (PPV): ", cm[5])
+    println("Negative Predictive Value (NPV): ", cm[6])
+    println("F1 Score: ", cm[7])
+end
+
+function printConfusionMatrix(outputs::AbstractArray{<:Real,2}, targets::AbstractArray{Bool,2}; weighted::Bool=true)
+    cm = confusionMatrix(outputs, targets; weighted=weighted)
+    println("Confusion Matrix:\n", cm[end])  # Último elemento es la matriz de confusión
+    println("Accuracy: ", cm[1])
+    println("Error Rate: ", cm[2])
+    println("Sensitivity: ", cm[3])
+    println("Specificity: ", cm[4])
+    println("Positive Predictive Value (PPV): ", cm[5])
+    println("Negative Predictive Value (NPV): ", cm[6])
+    println("F1 Score: ", cm[7])
+end
+
+function printConfusionMatrix(outputs::AbstractArray{<:Any,1}, targets::AbstractArray{<:Any,1}, classes::AbstractArray{<:Any,1}; weighted::Bool=true)
+    cm = confusionMatrix(outputs, targets, classes; weighted=weighted)
+    println("Confusion Matrix:\n", cm[end])  # Último elemento es la matriz de confusión
+    println("Accuracy: ", cm[1])
+    println("Error Rate: ", cm[2])
+    println("Sensitivity: ", cm[3])
+    println("Specificity: ", cm[4])
+    println("Positive Predictive Value (PPV): ", cm[5])
+    println("Negative Predictive Value (NPV): ", cm[6])
+    println("F1 Score: ", cm[7])
+end
+
+function printConfusionMatrix(outputs::AbstractArray{<:Any,1}, targets::AbstractArray{<:Any,1}; weighted::Bool=true)
+    classes = unique(vcat(targets, outputs))  # Extraer clases automáticamente
+    printConfusionMatrix(outputs, targets, classes; weighted=weighted)
+end
+
+
 #import Pkg; Pkg.add("SymDoME")
 
 using SymDoME
@@ -88,47 +131,38 @@ function trainClassDoME(trainingDataset::Tuple{AbstractArray{<:Real,2}, Abstract
     end
 end
 
+function trainClassDoME(trainingDataset::Tuple{AbstractArray{<:Real,2}, AbstractArray{<:Any,1}},
+    testInputs::AbstractArray{<:Real,2},
+    maximumNodes::Int)
+
+    (trainingInputs, trainingTargets) = trainingDataset
+    classes = unique(trainingTargets)
+
+    testOutputs = Array{eltype(trainingTargets), 1}(undef, size(testInputs, 1))
+
+    testOutputsDoME = trainClassDoME(
+    (trainingInputs, oneHotEncoding(trainingTargets, classes)),
+    testInputs, maximumNodes)
+
+    testOutputsBool = classifyOutputs(testOutputsDoME; threshold=0)
+
+    if length(classes) <= 2
+        testOutputsBool = vec(testOutputsBool)
+        testOutputs[testOutputsBool] .= classes[1]
+
+        if length(classes) == 2
+            testOutputs[.!testOutputsBool] .= classes[2]
+        end
+    elseif length(classes) > 2
+        for numClass in 1:length(classes)
+            testOutputs[testOutputsBool[:, numClass]] .= classes[numClass]
+        end
+    end
+
+    return testOutputs
+    end
 
 
 
 
-function printConfusionMatrix(outputs::AbstractArray{Bool,2}, targets::AbstractArray{Bool,2}; weighted::Bool=true)
-    cm = confusionMatrix(outputs, targets; weighted=weighted)
-    println("Confusion Matrix:\n", cm[end])  # Último elemento es la matriz de confusión
-    println("Accuracy: ", cm[1])
-    println("Error Rate: ", cm[2])
-    println("Sensitivity: ", cm[3])
-    println("Specificity: ", cm[4])
-    println("Positive Predictive Value (PPV): ", cm[5])
-    println("Negative Predictive Value (NPV): ", cm[6])
-    println("F1 Score: ", cm[7])
-end
-
-function printConfusionMatrix(outputs::AbstractArray{<:Real,2}, targets::AbstractArray{Bool,2}; weighted::Bool=true)
-    cm = confusionMatrix(outputs, targets; weighted=weighted)
-    println("Confusion Matrix:\n", cm[end])  # Último elemento es la matriz de confusión
-    println("Accuracy: ", cm[1])
-    println("Error Rate: ", cm[2])
-    println("Sensitivity: ", cm[3])
-    println("Specificity: ", cm[4])
-    println("Positive Predictive Value (PPV): ", cm[5])
-    println("Negative Predictive Value (NPV): ", cm[6])
-    println("F1 Score: ", cm[7])
-end
-
-function printConfusionMatrix(outputs::AbstractArray{<:Any,1}, targets::AbstractArray{<:Any,1}, classes::AbstractArray{<:Any,1}; weighted::Bool=true)
-    cm = confusionMatrix(outputs, targets, classes; weighted=weighted)
-    println("Confusion Matrix:\n", cm[end])  # Último elemento es la matriz de confusión
-    println("Accuracy: ", cm[1])
-    println("Error Rate: ", cm[2])
-    println("Sensitivity: ", cm[3])
-    println("Specificity: ", cm[4])
-    println("Positive Predictive Value (PPV): ", cm[5])
-    println("Negative Predictive Value (NPV): ", cm[6])
-    println("F1 Score: ", cm[7])
-end
-
-function printConfusionMatrix(outputs::AbstractArray{<:Any,1}, targets::AbstractArray{<:Any,1}; weighted::Bool=true)
-    classes = unique(vcat(targets, outputs))  # Extraer clases automáticamente
-    printConfusionMatrix(outputs, targets, classes; weighted=weighted)
-end
+    
