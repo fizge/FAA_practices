@@ -89,3 +89,46 @@ function trainClassDoME(trainingDataset::Tuple{AbstractArray{<:Real,2}, Abstract
 end
 
 
+
+
+
+function printConfusionMatrix(outputs::AbstractArray{Bool,2}, targets::AbstractArray{Bool,2}; weighted::Bool=true)
+    cm = confusionMatrix(outputs, targets; weighted=weighted)
+    println("Confusion Matrix:\n", cm[end])  # Último elemento es la matriz de confusión
+    println("Accuracy: ", cm[1])
+    println("Error Rate: ", cm[2])
+    println("Sensitivity: ", cm[3])
+    println("Specificity: ", cm[4])
+    println("Positive Predictive Value (PPV): ", cm[5])
+    println("Negative Predictive Value (NPV): ", cm[6])
+    println("F1 Score: ", cm[7])
+end
+
+function printConfusionMatrix(outputs::AbstractArray{<:Real,2}, targets::AbstractArray{Bool,2}; weighted::Bool=true)
+    cm = confusionMatrix(outputs, targets; weighted=weighted)
+    println("Confusion Matrix:\n", cm[end])  # Último elemento es la matriz de confusión
+    println("Accuracy: ", cm[1])
+    println("Error Rate: ", cm[2])
+    println("Sensitivity: ", cm[3])
+    println("Specificity: ", cm[4])
+    println("Positive Predictive Value (PPV): ", cm[5])
+    println("Negative Predictive Value (NPV): ", cm[6])
+    println("F1 Score: ", cm[7])
+end
+
+function printConfusionMatrix(outputs::AbstractArray{<:Any,1}, targets::AbstractArray{<:Any,1}, classes::AbstractArray{<:Any,1}; weighted::Bool=true)
+    cm = confusionMatrix(outputs, targets, classes; weighted=weighted)
+    println("Confusion Matrix:\n", cm[end])  # Último elemento es la matriz de confusión
+    println("Accuracy: ", cm[1])
+    println("Error Rate: ", cm[2])
+    println("Sensitivity: ", cm[3])
+    println("Specificity: ", cm[4])
+    println("Positive Predictive Value (PPV): ", cm[5])
+    println("Negative Predictive Value (NPV): ", cm[6])
+    println("F1 Score: ", cm[7])
+end
+
+function printConfusionMatrix(outputs::AbstractArray{<:Any,1}, targets::AbstractArray{<:Any,1}; weighted::Bool=true)
+    classes = unique(vcat(targets, outputs))  # Extraer clases automáticamente
+    printConfusionMatrix(outputs, targets, classes; weighted=weighted)
+end
