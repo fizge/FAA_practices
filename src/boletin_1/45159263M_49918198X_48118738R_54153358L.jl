@@ -238,8 +238,6 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
     maxEpochs::Int=1000, minLoss::Real=0.0, learningRate::Real=0.01,
     maxEpochsVal::Int=20)
 
-    println("hola")
-
     trainingInputs = Float32.(trainingDataset[1]') # Convertir inputs a float32
     validationInputs = Float32.(validationDataset[1]') # Convertir inputs a float32
     testInputs = Float32.(testDataset[1]') # Convertir inputs a float32
