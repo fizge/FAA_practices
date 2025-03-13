@@ -303,7 +303,6 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
             end
 
             if epochsWithoutImprovement >= maxEpochsVal
-                println("Parada temprana en epoch $epoch ")
                 break
             end
         end

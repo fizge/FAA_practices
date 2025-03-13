@@ -399,7 +399,7 @@ function confusionMatrix(outputs::AbstractArray{Bool,2},
         npv = zeros(num_classes) # Guardar memoria para valor predictivo negativo
         f1 = zeros(num_classes) # Guardar memoria para f1 score
 
-        for i in 1:size(outputs, 2)
+        for i in axes(outputs, 2)
             recall[i], especificity[i], precision[i], npv[i], f1[i], _ = confusionMatrix(outputs[:, i], targets[:, i])
         end
 
@@ -580,7 +580,7 @@ function trainClassDoME(trainingDataset::Tuple{AbstractArray{<:Real,2}, Abstract
             testOutputs[.!testOutputsBool] .= classes[2]
         end
     elseif length(classes) > 2
-        for numClass in 1:length(classes)
+        for numClass in axes(classes, 2)
             testOutputs[testOutputsBool[:, numClass]] .= classes[numClass]
         end
     end
@@ -630,7 +630,7 @@ function crossvalidation(targets::AbstractArray{Bool,2}, k::Int64)
     end
 
     indices = collect(1:size(targets, 1))
-    for i in 1:size(targets, 2)
+    for i in axes(targets, 2)
         indices[targets[:,i]] = crossvalidation(sum(targets[:,i]), k) # asignar a cada fila un valor de la lista de folds
     end
 
@@ -660,30 +660,31 @@ function ANNCrossValidation(topology::AbstractArray{<:Int,1},
     folds = maximum(crossValidationIndices) # Calcular el número de folds
 
 
-    accuracy = [] # inicializar vector de accuracy
-    fail_rate = [] # Inicializar vector de fail_rate
-    recall = [] # Inicializar vector de recall
-    especificity = [] # Inicializar vector de especifitity
-    precision = [] # Inicializar vector de precision
-    npv = [] # Inicializar vector de npv
-    f1 = [] # Inicializar vector de f1
-    confussion_matrix = [0 0; 0 0] # Inicializar confussion matrix
+    accuracy = Float64[] # Vector de precisión (accuracy)
+    fail_rate = Float64[] # Vector de tasa de error (error rate)
+    recall = Float64[] # Vector de sensibilidad (recall)
+    especificity = Float64[] # Vector de especificidad
+    precision = Float64[] # Vector de VPP (precisión)
+    npv = Float64[] # Vector de VPN
+    f1 = Float64[] # Vector de F1
+    confussion_matrix = zeros(length(classes), length(classes)) # Inicializar confussion matrix
 
     for fold in 1:folds
 
         # Extraer datos de entrenamiento y test según folds
-        train_inputs = inputs[:, crossValidationIndices .!= fold] # Extraer inputs de entrenamiento
-        train_targets = one_hot[:, crossValidationIndices .!= fold] # Extraer targets de entrenamiento
-        test_inputs = inputs[:, crossValidationIndices .== fold] # Extraer inputs de test
-        test_targets = one_hot[:, crossValidationIndices .== fold] # Extraer targets de test
-        validation_inputs = [] # Inicializar inputs de validación
-        validation_targets = [] # Inicializar targets de validación
+        train_inputs = inputs[findall(crossValidationIndices .!= fold), :]
+        train_targets = one_hot[findall(crossValidationIndices .!= fold), :]
+        test_inputs = inputs[findall(crossValidationIndices .== fold), :]
+        test_targets = one_hot[findall(crossValidationIndices .== fold), :]
+
+        validation_inputs = Matrix{Float32}(undef, 0, size(train_inputs, 2)) # Inicializar validation inputs como matriz vacía
+        validation_targets = Matrix{Bool}(undef, 0, size(train_targets, 2)) # Inicializar validation targets como matriz vacía
 
         if validationRatio > 0 # En caso de que tengamos validación
 
             v_ratio = validationRatio * (folds/(folds-1)) # Calcular ratio de validación adaptado.
 
-            trainIndices, validationIndices = holdOut(length(train_inputs), validationRatio) # Calcular indices de validación
+            trainIndices, validationIndices = holdOut(size(train_inputs, 1), v_ratio) # Calcular indices de validación
             validation_inputs = train_inputs[validationIndices, :] # Extraer inputs de validación
             validation_targets = train_targets[validationIndices, :] # Extraer targets de validación
             train_inputs = train_inputs[trainIndices, :] # Extraer inputs de entrenamiento
@@ -705,18 +706,18 @@ function ANNCrossValidation(topology::AbstractArray{<:Int,1},
         for i in 1:numExecutions
 
             # Entrenar ANN
-            ann, _, _, _ = trainClassANN(topology, 
-            (train_inputs, train_targets);
-            validationDataset=(validation_inputs, validation_targets),
-            testDataset=(test_inputs, test_targets),
-            transferFunctions=transferFunctions, 
-            maxEpochs=maxEpochs, 
-            minLoss=minLoss, 
-            learningRate=learningRate,
-            maxEpochsVal=maxEpochsVal)
+            ann, _, _, _ = trainClassANN(
+                topology, 
+                (train_inputs, train_targets);
+                validationDataset=(validation_inputs, validation_targets),
+                testDataset=(test_inputs, test_targets),
+                transferFunctions=transferFunctions, 
+                maxEpochs=maxEpochs, 
+                minLoss=minLoss, 
+                learningRate=learningRate)
 
             # Calcular métricas
-            metrics = confusionMatrix(ann(test_inputs), test_targets, classes)
+            metrics = confusionMatrix(ann(test_inputs')', test_targets)
 
             # Añadir métricas al registro.
             push!(acc_folf, metrics[1])
@@ -742,6 +743,6 @@ function ANNCrossValidation(topology::AbstractArray{<:Int,1},
     end
 
     # Devolver media y desviación de las métricas
-    return ((mean(acc_folf), std(acc_folf)), (mean(fail_rate_fold), std(fail_rate_fold)), (mean(recall_fold), std(recall_fold)), (mean(especificity_fold), std(especificity_fold)), (mean(precision_fold), std(precision_fold)), (mean(npv_fold), std(npv_fold)), (mean(f1_fold), std(f1_fold)), confussion_matrix)
+    return ((mean(accuracy), std(accuracy)), (mean(fail_rate), std(fail_rate)), (mean(recall), std(recall)), (mean(especificity), std(especificity)), (mean(precision), std(precision)), (mean(npv), std(npv)), (mean(f1), std(f1)), confussion_matrix)
 
 end
