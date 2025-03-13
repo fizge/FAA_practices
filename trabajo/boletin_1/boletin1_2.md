@@ -17,12 +17,12 @@
 
 ## **Ejercicio 5**
 
-### **Persona 4** 
+### **Rafa** 
 
     function crossvalidation(N::Int64, k::Int64)
     function crossvalidation(targets::AbstractArray{Bool,1}, k::Int64)
 
-### **Persona 3**
+### **Rafa**
     function crossvalidation(targets::AbstractArray{Bool,2}, k::Int64)
     function crossvalidation(targets::AbstractArray{<:Any,1}, k::Int64) 
 
