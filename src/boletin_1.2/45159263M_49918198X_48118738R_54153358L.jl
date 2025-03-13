@@ -347,7 +347,9 @@ end
 ##### ARCHIVO DE ENTREGAS PARA EJERCICIOS 4, 5 Y 6 #####
 ########################################################
 
-# Ejercicio 4 -> métricas
+##################################
+######## EJERCICIO 4.1 ###########
+##################################
 
 function confusionMatrix(outputs::AbstractArray{Bool,1}, targets::AbstractArray{Bool,1})
 
@@ -375,6 +377,85 @@ function confusionMatrix(outputs::AbstractArray{<:Real,1},
     outputs = outputs .> threshold
     return confusionMatrix(outputs, targets)
 
+end
+
+
+
+##################################
+######## EJERCICIO 4.2 ###########
+##################################
+
+
+function confusionMatrix(outputs::AbstractArray{Bool,2},
+    targets::AbstractArray{Bool,2}; weighted::Bool=true)
+
+    num_classes = size(targets, 2)
+
+    if size(outputs, 2) == size(targets, 2) && size(outputs, 2) > 2
+
+        recall = zeros(num_classes) # Guardar memoria para sensibilidad
+        especificity = zeros(num_classes) # Guardar memoria para especificidad
+        precision = zeros(num_classes) # Guardar memoria para valor predictivo positivo
+        npv = zeros(num_classes) # Guardar memoria para valor predictivo negativo
+        f1 = zeros(num_classes) # Guardar memoria para f1 score
+
+        for i in 1:size(outputs, 2)
+            recall[i], especificity[i], precision[i], npv[i], f1[i], _ = confusionMatrix(outputs[:, i], targets[:, i])
+        end
+
+        confussion_matrix = [sum(outputs[:, i] .& targets[:, j]) for i in 1:num_classes, j in 1:num_classes] # Matriz de confusion
+
+        if weighted
+            w = vec(sum(targets, dims=1))/size(targets, 1) # Peso de cada clase
+        else
+            w = repeat([1/num_classes], num_classes) # Peso uniforme (= media aritmética)
+        end
+
+        # Calcular métricas según el peso de cada clase (weighted o media aritmética) 
+        recall = sum(recall .* w)
+        especificity = sum(especificity .* w)
+        precision = sum(precision .* w)
+        npv = sum(npv .* w)
+        f1 = sum(f1 .* w)
+        acc = accuracy(outputs, targets)
+        fail_rate = 1 - acc
+
+        return(acc, fail_rate, recall, especificity, precision, npv, f1, confussion_matrix)
+
+
+    elseif size(outputs, 2) == size(targets, 2) && size(outputs, 2) == 1 # Clasificacion binaria
+        return confusionMatrix(outputs[:], targets[:])
+    end
+end
+
+
+function confusionMatrix(outputs::AbstractArray{<:Real,2},
+    targets::AbstractArray{Bool,2}; threshold::Real=0.5, weighted::Bool=true)
+
+    outputs = classifyOutputs(outputs, threshold)
+    return confusionMatrix(outputs, targets, weighted=weighted)
+
+end
+    
+
+function confusionMatrix(outputs::AbstractArray{<:Any,1},
+    targets::AbstractArray{<:Any,1},
+    classes::AbstractArray{<:Any,1}; weighted::Bool=true)
+
+    @assert(all([in(label, classes) for label in vcat(targets, outputs)])) # Comprobar que las etiquetas son correctas
+    @assert size(outputs, 1) == size(targets, 1)
+
+    outputs = oneHotEncoding(outputs, classes)
+    targets = oneHotEncoding(targets, classes)
+
+    return confusionMatrix(outputs, targets, weighted=weighted)
+end
+
+function confusionMatrix(outputs::AbstractArray{<:Any,1},
+    targets::AbstractArray{<:Any,1}; weighted::Bool=true)
+
+    classes = unique(vcat(outputs, targets))
+    return confusionMatrix(outputs, targets, classes, weighted=weighted)
 end
 
 
