@@ -516,7 +516,6 @@ function trainClassDoME(trainingDataset::Tuple{AbstractArray{<:Real,2}, Abstract
     testInputs = Float64.(testInputs)
 
     _, _, _, model = dome(trainingInputs, trainingTargets; maximumNodes = maximumNodes) 
-    println(string(model))
     testOutputs = evaluateTree(model, testInputs)
 
     if isa(testOutputs, Real)
@@ -580,7 +579,7 @@ function trainClassDoME(trainingDataset::Tuple{AbstractArray{<:Real,2}, Abstract
             testOutputs[.!testOutputsBool] .= classes[2]
         end
     elseif length(classes) > 2
-        for numClass in axes(classes, 2)
+        for numClass in axes(classes, 1)
             testOutputs[testOutputsBool[:, numClass]] .= classes[numClass]
         end
     end
