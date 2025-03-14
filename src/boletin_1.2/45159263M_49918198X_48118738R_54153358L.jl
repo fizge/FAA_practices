@@ -391,7 +391,7 @@ function confusionMatrix(outputs::AbstractArray{Bool,2},
 
     num_classes = size(targets, 2)
 
-    if size(outputs, 2) == size(targets, 2) && size(outputs, 2) > 2
+    if size(outputs, 2) == size(targets, 2) && size(outputs, 2) != 2
 
         recall = zeros(num_classes) # Guardar memoria para sensibilidad
         especificity = zeros(num_classes) # Guardar memoria para especificidad
@@ -399,11 +399,11 @@ function confusionMatrix(outputs::AbstractArray{Bool,2},
         npv = zeros(num_classes) # Guardar memoria para valor predictivo negativo
         f1 = zeros(num_classes) # Guardar memoria para f1 score
 
-        for i in axes(outputs, 2)
-            recall[i], especificity[i], precision[i], npv[i], f1[i], _ = confusionMatrix(outputs[:, i], targets[:, i])
+        for i in 1:size(outputs, 2)
+            _, _, recall[i], especificity[i], precision[i], npv[i], f1[i], _ = confusionMatrix(outputs[:, i], targets[:, i])
         end
 
-        confussion_matrix = [sum(outputs[:, i] .& targets[:, j]) for i in 1:num_classes, j in 1:num_classes] # Matriz de confusion
+        confussion_matrix = [sum(outputs[:, j] .& targets[:, i]) for i in 1:num_classes, j in 1:num_classes]
 
         if weighted
             w = vec(sum(targets, dims=1))/size(targets, 1) # Peso de cada clase
@@ -842,10 +842,8 @@ function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict,
                 kernel_map = Dict(
                     "linear" => LIBSVM.Kernel.Linear,
                     "rbf" => LIBSVM.Kernel.RadialBasis,
-                    "radialbasis" => LIBSVM.Kernel.RadialBasis,
                     "sigmoid" => LIBSVM.Kernel.Sigmoid,
                     "poly" => LIBSVM.Kernel.Polynomial,
-                    "polynomial" => LIBSVM.Kernel.Polynomial
                 )
 
                 @assert(haskey(kernel_map, kernel_type), "Kernel no soportado: $(kernel)")
