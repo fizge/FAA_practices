@@ -745,3 +745,184 @@ function ANNCrossValidation(topology::AbstractArray{<:Int,1},
     return ((mean(accuracy), std(accuracy)), (mean(fail_rate), std(fail_rate)), (mean(recall), std(recall)), (mean(especificity), std(especificity)), (mean(precision), std(precision)), (mean(npv), std(npv)), (mean(f1), std(f1)), confussion_matrix)
 
 end
+
+
+##########################
+###### EJERCICIO 6 #######
+##########################
+
+
+function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict,
+    dataset::Tuple{AbstractArray{<:Real,2}, AbstractArray{<:Any,1}},
+    crossValidationIndices::Array{Int64,1})
+
+    # Normalizar claves: permitir tanto Strings como Symbols
+    function get_param(dict, key)
+        return get(dict, key, get(dict, Symbol(key), nothing))
+    end
+
+    if modelType == :ANN
+        # Comprobar que existe el parámetro obligatorio
+        topology = get_param(modelHyperparameters, "topology")
+        @assert(topology !== nothing, "El parámetro topology' es obligatorio para ANN")
+        @assert(isa(topology, AbstractArray{<:Int,1}), "topology debe ser un AbstractArray{<:Int,1}")
+
+        # Crear un nuevo diccionario para los parámetros opcionales
+        ann_params = Dict{Symbol, Any}()
+        
+        # Lista de parámetros opcionales con sus tipos esperados
+        param_types = Dict(
+            :numExecutions => Int,
+            :transferFunctions => AbstractArray{<:Function,1},
+            :maxEpochs => Int,
+            :minLoss => Real,
+            :learningRate => Real,
+            :validationRatio => Real,
+            :maxEpochsVal => Int
+        )
+
+        # Validar y agregar parámetros opcionales
+        for (param, param_type) in param_types
+            value = get_param(modelHyperparameters, param)
+            if value !== nothing
+                @assert isa(value, param_type) "$(param) debe ser de tipo $(param_type)"
+                ann_params[param] = value
+            end
+        end
+
+        # Llamar a ANNCrossValidation con los argumentos validados
+        return ANNCrossValidation(
+            topology, 
+            dataset, 
+            crossValidationIndices; 
+            pairs(ann_params)...
+        )
+
+    else
+        inputs, targets = dataset
+        targets = string.(targets) # convertir a string
+        classes = unique(targets)
+        folds = maximum(crossValidationIndices)
+
+        accuracy = Float64[]
+        fail_rate = Float64[]
+        recall = Float64[]
+        especificity = Float64[]
+        precision = Float64[]
+        npv = Float64[]
+        f1 = Float64[]
+        confussion_matrix = zeros(length(classes), length(classes))
+
+        for fold in 1:folds
+            train_inputs = inputs[findall(crossValidationIndices .!= fold), :]
+            train_targets = targets[findall(crossValidationIndices .!= fold), :]
+            test_inputs = inputs[findall(crossValidationIndices .== fold), :]
+            test_targets = targets[findall(crossValidationIndices .== fold), :]
+
+            if modelType == :DoME
+                maximumNodes = get_param(modelHyperparameters, "maximumNodes")
+                @assert(maximumNodes !== nothing, "El parámetro 'maximumNodes' es obligatorio para DoME")
+                @assert(isa(maximumNodes, Int), "maximumNodes debe ser un Int")
+
+                model_output = trainClassDoME((train_inputs, train_targets[:]), test_inputs, maximumNodes)
+
+            elseif modelType == :SVC
+
+                svm_params = Dict{Symbol, Any}()
+
+                C = get_param(modelHyperparameters, "C")
+                @assert(C !== nothing, "El parámetro 'C' es obligatorio para SVM")
+                @assert(isa(C, Real), "C debe ser un número Real")
+
+                kernel = get_param(modelHyperparameters, "kernel")
+                @assert(kernel !== nothing, "El parámetro 'kernel' es obligatorio para SVM")
+                @assert(isa(kernel, String), "kernel debe ser un String")
+
+                kernel_type = lowercase(kernel)
+                kernel_map = Dict(
+                    "linear" => LIBSVM.Kernel.Linear,
+                    "rbf" => LIBSVM.Kernel.RadialBasis,
+                    "radialbasis" => LIBSVM.Kernel.RadialBasis,
+                    "sigmoid" => LIBSVM.Kernel.Sigmoid,
+                    "poly" => LIBSVM.Kernel.Polynomial,
+                    "polynomial" => LIBSVM.Kernel.Polynomial
+                )
+
+                @assert(haskey(kernel_map, kernel_type), "Kernel no soportado: $(kernel)")
+
+                kernel = kernel_map[kernel_type]
+
+                if kernel in [LIBSVM.Kernel.RadialBasis, LIBSVM.Kernel.Sigmoid, LIBSVM.Kernel.Polynomial]
+                    gamma = get_param(modelHyperparameters, "gamma")
+                    @assert(gamma !== nothing, "El parámetro 'gamma' es obligatorio para $(kernel_type) SVM")
+                    @assert(isa(gamma, Real), "gamma debe ser un número Real")
+                    svm_params[:gamma] = Float64(gamma)
+                end
+
+                if kernel in [LIBSVM.Kernel.Sigmoid, LIBSVM.Kernel.Polynomial]
+                    coef0 = get_param(modelHyperparameters, "coef0")
+                    @assert(coef0 !== nothing, "El parámetro 'coef0' es obligatorio para $(kernel_type) SVM")
+                    @assert(isa(coef0, Real), "coef0 debe ser un número Real")
+                    svm_params[:coef0] = Float64(coef0)
+                end
+
+                if kernel == LIBSVM.Kernel.Polynomial
+                    degree = get_param(modelHyperparameters, "degree")
+                    @assert(degree !== nothing, "El parámetro 'degree' es obligatorio para Polynomial SVM")
+                    @assert(isa(degree, Int), "degree debe ser un Int")
+                    svm_params[:degree] = Int32(degree)
+                end
+
+                model = SVMClassifier(kernel=kernel, cost=Float64(C); svm_params...)
+                mach = machine(model, MLJ.table(train_inputs), categorical(train_targets[:]))
+                MLJ.fit!(mach, verbosity=0)
+                model_output = MLJ.predict(mach, MLJ.table(test_inputs))
+
+            elseif modelType == :DecisionTreeClassifier
+
+                max_depth = get_param(modelHyperparameters, "max_depth")
+                rng = get_param(modelHyperparameters, "rng")
+                @assert(max_depth !== nothing && rng !== nothing, "max_depth y rng son obligatorios para DecisionTree")
+                
+                model = DTClassifier(max_depth=max_depth, rng=rng)
+                mach = machine(model, MLJ.table(train_inputs), categorical(train_targets[:]))
+                MLJ.fit!(mach, verbosity=0)
+                output = MLJ.predict(mach, MLJ.table(test_inputs))
+                model_output = mode.(output)
+
+            elseif modelType == :KNNClassifier
+                
+                k = get_param(modelHyperparameters, "k")
+                @assert(k !== nothing, "El parámetro 'k' es obligatorio para KNN")
+                
+                model = kNNClassifier(K = k)
+                mach = machine(model, MLJ.table(train_inputs), categorical(train_targets[:]))
+                MLJ.fit!(mach, verbosity=0)
+                output = MLJ.predict(mach, MLJ.table(test_inputs))
+                model_output = mode.(output)
+            end
+
+            # Calcular métricas del fold
+            metrics = confusionMatrix(model_output, test_targets[:], classes)
+            push!(accuracy, metrics[1])
+            push!(fail_rate, metrics[2])
+            push!(recall, metrics[3])
+            push!(especificity, metrics[4])
+            push!(precision, metrics[5])
+            push!(npv, metrics[6])
+            push!(f1, metrics[7])
+            confussion_matrix += metrics[8]
+        end
+
+        return (
+            (mean(accuracy), std(accuracy)),
+            (mean(fail_rate), std(fail_rate)),
+            (mean(recall), std(recall)),
+            (mean(especificity), std(especificity)),
+            (mean(precision), std(precision)),
+            (mean(npv), std(npv)),
+            (mean(f1), std(f1)),
+            confussion_matrix
+           )
+    end
+end
