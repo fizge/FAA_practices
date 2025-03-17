@@ -842,8 +842,10 @@ function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict,
                 kernel_map = Dict(
                     "linear" => LIBSVM.Kernel.Linear,
                     "rbf" => LIBSVM.Kernel.RadialBasis,
+                    "radialbasis" => LIBSVM.Kernel.RadialBasis,
                     "sigmoid" => LIBSVM.Kernel.Sigmoid,
                     "poly" => LIBSVM.Kernel.Polynomial,
+                    "polynomial" => LIBSVM.Kernel.Polynomial
                 )
 
                 @assert(haskey(kernel_map, kernel_type), "Kernel no soportado: $(kernel)")
@@ -879,8 +881,9 @@ function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict,
             elseif modelType == :DecisionTreeClassifier
 
                 max_depth = get_param(modelHyperparameters, "max_depth")
-                rng = get_param(modelHyperparameters, "rng")
-                @assert(max_depth !== nothing && rng !== nothing, "max_depth y rng son obligatorios para DecisionTree")
+                @assert(max_depth !== nothing, "max_depth es obligatorio para DecisionTree")
+
+                rng = rng = Random.MersenneTwister(1) 
                 
                 model = DTClassifier(max_depth=max_depth, rng=rng)
                 mach = machine(model, MLJ.table(train_inputs), categorical(train_targets[:]))
