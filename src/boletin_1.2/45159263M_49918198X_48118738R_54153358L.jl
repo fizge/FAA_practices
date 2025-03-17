@@ -391,7 +391,7 @@ function confusionMatrix(outputs::AbstractArray{Bool,2},
 
     num_classes = size(targets, 2)
 
-    if size(outputs, 2) == size(targets, 2) && size(outputs, 2) != 2
+    if size(outputs, 2) == size(targets, 2) && size(outputs, 2) > 2
 
         recall = zeros(num_classes) # Guardar memoria para sensibilidad
         especificity = zeros(num_classes) # Guardar memoria para especificidad
@@ -432,7 +432,7 @@ end
 function confusionMatrix(outputs::AbstractArray{<:Real,2},
     targets::AbstractArray{Bool,2}; threshold::Real=0.5, weighted::Bool=true)
 
-    outputs = classifyOutputs(outputs, threshold)
+    outputs = classifyOutputs(outputs; threshold=threshold)
     return confusionMatrix(outputs, targets, weighted=weighted)
 
 end
