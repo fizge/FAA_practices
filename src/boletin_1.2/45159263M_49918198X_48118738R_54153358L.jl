@@ -818,6 +818,7 @@ function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict,
             train_targets = targets[findall(crossValidationIndices .!= fold), :]
             test_inputs = inputs[findall(crossValidationIndices .== fold), :]
             test_targets = targets[findall(crossValidationIndices .== fold), :]
+            model_output = [] # Inicializar model_output vacío
 
             if modelType == :DoME
                 maximumNodes = get_param(modelHyperparameters, "maximumNodes")
@@ -891,7 +892,7 @@ function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict,
                 output = MLJ.predict(mach, MLJ.table(test_inputs))
                 model_output = mode.(output)
 
-            elseif modelType == :KNNClassifier
+            elseif modelType == :KNeighborsClassifier
                 
                 k = get_param(modelHyperparameters, "k")
                 @assert(k !== nothing, "El parámetro 'k' es obligatorio para KNN")
@@ -901,7 +902,14 @@ function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict,
                 MLJ.fit!(mach, verbosity=0)
                 output = MLJ.predict(mach, MLJ.table(test_inputs))
                 model_output = mode.(output)
+            
+            else
+                println("Modelo no soportado: $modelType, comprueba los parámetros de la funcción")
+                return
             end
+
+            # Asegurarse de que se peuden calcular las métricas
+            @assert length(model_output) == length(test_targets[:]) "Las dimensiones de model_output y test_targets no coinciden"
 
             # Calcular métricas del fold
             metrics = confusionMatrix(model_output, test_targets[:], classes)
