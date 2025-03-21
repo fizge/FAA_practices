@@ -894,10 +894,10 @@ function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict,
 
             elseif modelType == :KNeighborsClassifier
                 
-                k = get_param(modelHyperparameters, "k")
-                @assert(k !== nothing, "El parámetro 'k' es obligatorio para KNN")
+                n_neighbors = get_param(modelHyperparameters, "n_neighbors")
+                @assert(n_neighbors !== nothing, "El parámetro 'n_neighbors' es obligatorio para KNN")
                 
-                model = kNNClassifier(K = k)
+                model = kNNClassifier(K = n_neighbors)
                 mach = machine(model, MLJ.table(train_inputs), categorical(train_targets[:]))
                 MLJ.fit!(mach, verbosity=0)
                 output = MLJ.predict(mach, MLJ.table(test_inputs))
